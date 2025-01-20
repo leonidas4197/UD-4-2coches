@@ -1,64 +1,75 @@
-/**
- * Tres formas de almacenar valores en memoria en javascript:
- *      let: se puede modificar
- *      var: se puede modificar
- *      const: es constante y no se puede modificar
- */
-
 // Importamos las bibliotecas necesarias.
-// Concretamente el framework express.
+// Concretamente el framework express y ciertas librerías de mongodb.
 const express = require("express");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // Inicializamos la aplicación
 const app = express();
+
+// URL de conexión
+const uri = 
+    "mongodb+srv://sergiojosero:M286ITSda5ANXzzj@cluster0.4hfcj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
 
 // Indicamos que la aplicación puede recibir JSON (API Rest)
 app.use(express.json());
 
 // Indicamos el puerto en el que vamos a desplegar la aplicación
+// eslint-disable-next-line no-undef
 const port = process.env.PORT || 8080;
 
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+let db;
+
 // Arrancamos la aplicación
-app.listen(port, () => {
+app.listen(port, async () => {
+  await client.connect();
+  db = await client.db("mi-proyecto");
+
   console.log(`Servidor desplegado en puerto: ${port}`);
 });
 
-// Definimos una estructura de datos
-// (temporal hasta incorporar una base de datos)
-let coches = [
-  { marca: "Renault", modelo: "Clio" },
-  { marca: "Nissan", modelo: "Skyline R34" },
-];
-
 // Lista todos los coches
-app.get("/coches", (request, response) => {
+app.get("/coches", async (request, response) => {
+  const coches = await db.collection("coches").find({}).toArray();
+
   response.json(coches);
 });
 
 // Añadir un nuevo coche
-app.post("/coches", (request, response) => {
-  coches.push(request.body);
+app.post("/coches", async (request, response) => {
+  await db.collection("coches").insertOne(request.body);
+
   response.json({ message: "ok" });
 });
 
 // Obtener un solo coche
-app.get("/coches/:id", (request, response) => {
-  const id = request.params.id;
-  const result = coches[id];
-  response.json({ result });
+app.get("/coches/:id", async (request, response) => {
+  const id = new ObjectId(request.params.id);
+  const coche = await db.collection("coches").find({ _id: id }).toArray();
+
+  response.json({ coche });
 });
 
 // Actualizar un solo coche
-app.put("/coches/:id", (request, response) => {
-  const id = request.params.id;
-  coches[id] = request.body;
+app.put("/coches/:id", async (request, response) => {
+  const id = new ObjectId(request.params.id);
+  await db.collection("coches").updateOne({ _id: id }, { $set: request.body });
+
   response.json({ message: "ok" });
 });
 
 // Borrar un elemento del array
-app.delete("/coches/:id", (request, response) => {
-  const id = request.params.id;
-  coches = coches.filter((item) => coches.indexOf(item) !== id);
+app.delete("/coches/:id", async (request, response) => {
+  const id = new ObjectId(request.params.id);
+  await db.collection("coches").deleteOne({ _id: id });
 
   response.json({ message: "ok" });
 });
