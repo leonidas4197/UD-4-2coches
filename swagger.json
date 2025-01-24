@@ -1,0 +1,137 @@
+{
+  "swagger": "2.0",
+  "basePath": "/",
+  "info": {
+    "title": "Concesionarios API.",
+    "version": " 1.0.0"
+  },
+  "definitions": {
+    "Coche": {
+      "type": "object",
+      "properties": {
+        "marca": {
+          "type": "string"
+        },
+        "modelo": {
+          "type": "string"
+        }
+      },
+      "required": ["marca", "modelo"]
+    }
+  },
+  "paths": {
+    "/coches": {
+      "get": {
+        "summary": "Fetch coches",
+        "operationId": "getCoches",
+        "responses": {
+          "200": {
+            "description": "List of coches.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Coche"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create coches",
+        "operationId": "createCoche",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "coche",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/Coche"
+              },
+              "example": {
+                "marca": "Nissan",
+                "modelo": "Skyline R34"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{message: 'ok'}"
+          }
+        }
+      }
+    },
+    "/coches/{id}": {
+      "get": {
+        "summary": "Get a coche by id.",
+        "operationId": "getCoche",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetch coches.",
+            "schema": {
+              "$ref": "#/definitions/Coche"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Coche.",
+        "operationId": "updateCoche",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "coche",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/Coche"
+              },
+              "example": {
+                "marca": "Nissan",
+                "modelo": "Skyline R34"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{message: 'ok'}"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Coche.",
+        "operationId": "deleteCoches",
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{message: 'ok'}"
+          }
+        }
+      }
+    }
+  }
+}
