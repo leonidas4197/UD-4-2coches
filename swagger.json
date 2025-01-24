@@ -3,7 +3,7 @@
   "basePath": "/",
   "info": {
     "title": "Concesionarios API.",
-    "version": " 1.0.0"
+    "version": "1.0.0"
   },
   "definitions": {
     "Coche": {
@@ -14,9 +14,16 @@
         },
         "modelo": {
           "type": "string"
+        },
+        "cv": {
+          "type": "integer"
+        },
+        "precio": {
+          "type": "number",
+          "format": "float"
         }
       },
-      "required": ["marca", "modelo"]
+      "required": ["marca", "modelo", "cv", "precio"]
     }
   },
   "paths": {
@@ -45,19 +52,21 @@
             "in": "body",
             "name": "coche",
             "schema": {
-              "items": {
-                "$ref": "#/definitions/Coche"
-              },
-              "example": {
-                "marca": "Nissan",
-                "modelo": "Skyline R34"
-              }
+              "$ref": "#/definitions/Coche"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "{message: 'ok'}"
+            "description": "Coche creado con éxito.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -76,7 +85,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Fetch coches.",
+            "description": "Fetch coche.",
             "schema": {
               "$ref": "#/definitions/Coche"
             }
@@ -98,26 +107,27 @@
             "in": "body",
             "name": "coche",
             "schema": {
-              "items": {
-                "$ref": "#/definitions/Coche"
-              },
-              "example": {
-                "marca": "Nissan",
-                "modelo": "Skyline R34"
-              }
+              "$ref": "#/definitions/Coche"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "{message: 'ok'}"
+            "description": "Coche actualizado con éxito.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "summary": "Delete Coche.",
-        "operationId": "deleteCoches",
-        "consumes": ["application/json"],
+        "operationId": "deleteCoche",
         "parameters": [
           {
             "in": "path",
@@ -128,7 +138,15 @@
         ],
         "responses": {
           "200": {
-            "description": "{message: 'ok'}"
+            "description": "Coche borrado con éxito.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
