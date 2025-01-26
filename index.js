@@ -1,26 +1,18 @@
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger.json");
 
-// Importamos las bibliotecas necesarias.
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-// Inicializamos la aplicación
 const app = express();
 
-// URL de conexión
 const uri = "mongodb+srv://sergiojosero:M286ITSda5ANXzzj@cluster0.4hfcj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-// Indicamos que la aplicación puede recibir JSON (API Rest)
 app.use(express.json());
-
-// Configuración de Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Indicamos el puerto en el que vamos a desplegar la aplicación
 const port = process.env.PORT || 8080;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -28,38 +20,120 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
 let db;
 
-// Arrancamos la aplicación
 app.listen(port, async () => {
   await client.connect();
   db = await client.db("mi-proyecto");
   console.log(`Servidor desplegado en puerto: ${port}`);
 });
 
-// Ruta para obtener todos los coches
-app.get("/coches", async (req, res) => {
-  const coches = await db.collection("coches").find({}).toArray();
-  res.json(coches);
+// Rutas para concesionarios
+
+app.get("/concesionarios", async (req, res) => {
+  const concesionarios = await db.collection("concesionarios").find({}).toArray();
+  res.json(concesionarios);
 });
 
-// Ruta para crear un coche
-app.post("/coches", async (req, res) => {
-  const { marca, modelo, cv, precio } = req.body;
-  if (!marca || !modelo || !cv || !precio) {
+app.post("/concesionarios", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ message: "El campo id es requerido." });
+  }
+
+  const newConcesionario = { id, coches: [] };
+  await db.collection("concesionarios").insertOne(newConcesionario);
+
+  res.json({ message: "Concesionario creado con éxito." });
+});
+
+app.get("/concesionarios/:id", async (req, res) => {
+  const id = req.params.id;
+  const concesionario = await db.collection("concesionarios").findOne({ id });
+
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  res.json(concesionario);
+});
+
+app.put("/concesionarios/:id", async (req, res) => {
+  const id = req.params.id;
+  const { coches } = req.body;
+
+  const updated = await db.collection("concesionarios").updateOne(
+    { id },
+    { $set: { coches } }
+  );
+
+  if (updated.modifiedCount === 0) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  res.json({ message: "Concesionario actualizado con éxito." });
+});
+
+app.delete("/concesionarios/:id", async (req, res) => {
+  const id = req.params.id;
+  const deleted = await db.collection("concesionarios").deleteOne({ id });
+
+  if (deleted.deletedCount === 0) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  res.json({ message: "Concesionario borrado con éxito." });
+});
+
+// Rutas para coches dentro de concesionarios
+
+app.get("/concesionarios/:id/coches", async (req, res) => {
+  const id = req.params.id;
+  const concesionario = await db.collection("concesionarios").findOne({ id });
+
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  res.json(concesionario.coches);
+});
+
+app.post("/concesionarios/:id/coches", async (req, res) => {
+  const id = req.params.id;
+  const { cocheId, marca, modelo } = req.body;
+
+  if (!cocheId || !marca || !modelo) {
     return res.status(400).json({ message: "Todos los campos son requeridos." });
   }
 
-  const newCar = { marca, modelo, cv, precio };
-  await db.collection("coches").insertOne(newCar);
+  const concesionario = await db.collection("concesionarios").findOne({ id });
 
-  res.json({ message: "Coche creado con éxito." });
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  concesionario.coches.push({ cocheId, marca, modelo });
+
+  await db.collection("concesionarios").updateOne(
+    { id },
+    { $set: { coches: concesionario.coches } }
+  );
+
+  res.json({ message: "Coche añadido con éxito." });
 });
 
-// Ruta para obtener un coche por ID
-app.get("/coches/:id", async (req, res) => {
-  const id = new ObjectId(req.params.id);
-  const coche = await db.collection("coches").findOne({ _id: id });
+app.get("/concesionarios/:id/coches/:cocheId", async (req, res) => {
+  const id = req.params.id;
+  const cocheId = req.params.cocheId;
+
+  const concesionario = await db.collection("concesionarios").findOne({ id });
+
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  const coche = concesionario.coches.find((c) => c.cocheId === cocheId);
 
   if (!coche) {
     return res.status(404).json({ message: "Coche no encontrado." });
@@ -68,35 +142,59 @@ app.get("/coches/:id", async (req, res) => {
   res.json(coche);
 });
 
-// Ruta para actualizar un coche
-app.put("/coches/:id", async (req, res) => {
-  const id = new ObjectId(req.params.id);
-  const { marca, modelo, cv, precio } = req.body;
+app.put("/concesionarios/:id/coches/:cocheId", async (req, res) => {
+  const id = req.params.id;
+  const cocheId = req.params.cocheId;
+  const { marca, modelo } = req.body;
 
-  if (!marca || !modelo || !cv || !precio) {
+  if (!marca || !modelo) {
     return res.status(400).json({ message: "Todos los campos son requeridos." });
   }
 
-  const updated = await db.collection("coches").updateOne(
-    { _id: id },
-    { $set: { marca, modelo, cv, precio } }
-  );
+  const concesionario = await db.collection("concesionarios").findOne({ id });
 
-  if (updated.modifiedCount === 0) {
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  const cocheIndex = concesionario.coches.findIndex((c) => c.cocheId === cocheId);
+
+  if (cocheIndex === -1) {
     return res.status(404).json({ message: "Coche no encontrado." });
   }
+
+  concesionario.coches[cocheIndex] = { cocheId, marca, modelo };
+
+  await db.collection("concesionarios").updateOne(
+    { id },
+    { $set: { coches: concesionario.coches } }
+  );
 
   res.json({ message: "Coche actualizado con éxito." });
 });
 
-// Ruta para eliminar un coche
-app.delete("/coches/:id", async (req, res) => {
-  const id = new ObjectId(req.params.id);
-  const deleted = await db.collection("coches").deleteOne({ _id: id });
+app.delete("/concesionarios/:id/coches/:cocheId", async (req, res) => {
+  const id = req.params.id;
+  const cocheId = req.params.cocheId;
 
-  if (deleted.deletedCount === 0) {
+  const concesionario = await db.collection("concesionarios").findOne({ id });
+
+  if (!concesionario) {
+    return res.status(404).json({ message: "Concesionario no encontrado." });
+  }
+
+  const cocheIndex = concesionario.coches.findIndex((c) => c.cocheId === cocheId);
+
+  if (cocheIndex === -1) {
     return res.status(404).json({ message: "Coche no encontrado." });
   }
+
+  concesionario.coches.splice(cocheIndex, 1);
+
+  await db.collection("concesionarios").updateOne(
+    { id },
+    { $set: { coches: concesionario.coches } }
+  );
 
   res.json({ message: "Coche borrado con éxito." });
 });
