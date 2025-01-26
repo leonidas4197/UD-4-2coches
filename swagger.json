@@ -1,111 +1,168 @@
 {
   "swagger": "2.0",
-  "basePath": "/",
   "info": {
-    "title": "Concesionarios API.",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "title": "API de Concesionarios y Coches",
+    "description": "API para gestionar concesionarios y coches."
   },
-  "definitions": {
-    "Coche": {
-      "type": "object",
-      "properties": {
-        "marca": {
-          "type": "string"
-        },
-        "modelo": {
-          "type": "string"
-        },
-        "cv": {
-          "type": "integer"
-        },
-        "precio": {
-          "type": "number",
-          "format": "float"
-        }
-      },
-      "required": ["marca", "modelo", "cv", "precio"]
-    }
-  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "schemes": ["http"],
   "paths": {
-    "/coches": {
+    "/concesionarios": {
       "get": {
-        "summary": "Fetch coches",
-        "operationId": "getCoches",
+        "summary": "Obtener todos los concesionarios",
         "responses": {
           "200": {
-            "description": "List of coches.",
+            "description": "Lista de concesionarios",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Coche"
+                "$ref": "#/definitions/Concesionario"
               }
             }
           }
         }
       },
       "post": {
-        "summary": "Create coches",
-        "operationId": "createCoche",
-        "consumes": ["application/json"],
+        "summary": "Crear un nuevo concesionario",
         "parameters": [
           {
             "in": "body",
-            "name": "coche",
+            "name": "body",
+            "description": "Datos del concesionario",
+            "required": true,
             "schema": {
-              "$ref": "#/definitions/Coche"
+              "$ref": "#/definitions/Concesionario"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Coche creado con éxito.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string"
-                }
-              }
-            }
+            "description": "Concesionario creado con éxito."
+          },
+          "400": {
+            "description": "Error en la solicitud."
           }
         }
       }
     },
-    "/coches/{id}": {
+    "/concesionarios/{id}": {
       "get": {
-        "summary": "Get a coche by id.",
-        "operationId": "getCoche",
+        "summary": "Obtener un concesionario por ID",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID del concesionario"
           }
         ],
         "responses": {
           "200": {
-            "description": "Fetch coche.",
+            "description": "Datos del concesionario",
             "schema": {
-              "$ref": "#/definitions/Coche"
+              "$ref": "#/definitions/Concesionario"
             }
+          },
+          "404": {
+            "description": "Concesionario no encontrado."
           }
         }
       },
       "put": {
-        "summary": "Update Coche.",
-        "operationId": "updateCoche",
-        "consumes": ["application/json"],
+        "summary": "Actualizar un concesionario por ID",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID del concesionario"
           },
           {
             "in": "body",
-            "name": "coche",
+            "name": "body",
+            "description": "Datos actualizados del concesionario",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Concesionario"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Concesionario actualizado con éxito."
+          },
+          "404": {
+            "description": "Concesionario no encontrado."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Borrar un concesionario por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "description": "ID del concesionario"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Concesionario borrado con éxito."
+          },
+          "404": {
+            "description": "Concesionario no encontrado."
+          }
+        }
+      }
+    },
+    "/concesionarios/{id}/coches": {
+      "get": {
+        "summary": "Obtener todos los coches de un concesionario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "description": "ID del concesionario"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de coches del concesionario",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Coche"
+              }
+            }
+          },
+          "404": {
+            "description": "Concesionario no encontrado."
+          }
+        }
+      },
+      "post": {
+        "summary": "Añadir un coche a un concesionario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "description": "ID del concesionario"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Datos del coche",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/Coche"
             }
@@ -113,43 +170,144 @@
         ],
         "responses": {
           "200": {
-            "description": "Coche actualizado con éxito.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string"
-                }
-              }
-            }
+            "description": "Coche añadido con éxito."
+          },
+          "404": {
+            "description": "Concesionario no encontrado."
           }
         }
-      },
-      "delete": {
-        "summary": "Delete Coche.",
-        "operationId": "deleteCoche",
+      }
+    },
+    "/concesionarios/{id}/coches/{cocheId}": {
+      "get": {
+        "summary": "Obtener un coche por ID",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID del concesionario"
+          },
+          {
+            "in": "path",
+            "name": "cocheId",
+            "required": true,
+            "type": "string",
+            "description": "ID del coche"
           }
         ],
         "responses": {
           "200": {
-            "description": "Coche borrado con éxito.",
+            "description": "Datos del coche",
             "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string"
-                }
-              }
+              "$ref": "#/definitions/Coche"
             }
+          },
+          "404": {
+            "description": "Coche o concesionario no encontrado."
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar un coche por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "description": "ID del concesionario"
+          },
+          {
+            "in": "path",
+            "name": "cocheId",
+            "required": true,
+            "type": "string",
+            "description": "ID del coche"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Datos actualizados del coche",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Coche"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coche actualizado con éxito."
+          },
+          "404": {
+            "description": "Coche o concesionario no encontrado."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Borrar un coche por ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string",
+            "description": "ID del concesionario"
+          },
+          {
+            "in": "path",
+            "name": "cocheId",
+            "required": true,
+            "type": "string",
+            "description": "ID del coche"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coche borrado con éxito."
+          },
+          "404": {
+            "description": "Coche o concesionario no encontrado."
           }
         }
       }
+    }
+  },
+  "definitions": {
+    "Concesionario": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identificador único del concesionario"
+        },
+        "coches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Coche"
+          }
+        }
+      },
+      "required": ["id"]
+    },
+    "Coche": {
+      "type": "object",
+      "properties": {
+        "cocheId": {
+          "type": "string",
+          "description": "Identificador único del coche"
+        },
+        "marca": {
+          "type": "string",
+          "description": "Marca del coche"
+        },
+        "modelo": {
+          "type": "string",
+          "description": "Modelo del coche"
+        }
+      },
+      "required": ["cocheId", "marca", "modelo"]
     }
   }
 }
